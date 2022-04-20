@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Books</title>
+</head>
+<body>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<br>
+<div class="d-flex justify-content-center">
+    <form class="form-row" id="createBook">
+        <div class="col">
+            <input  class="form-control" id="isbn" placeholder="ISBN">
+        </div>
+        <div class="col">
+            <input  class="form-control" id="title" placeholder="Title">
+        </div>
+        <div class="col">
+            <input  class="form-control" id="author" placeholder="Author">
+        </div>
+        <button type="submit" class="btn btn-primary mb-2">Create</button>
+    </form>
+</div>
+
+<br>
+<div class="d-flex justify-content-center">
+    <form class="form-inline" id="findBooks">
+        <div class="form-group mx-sm-3 mb-2">
+            <input class="form-control" id="find-title" placeholder="Title">
+        </div>
+        <button type="submit" class="btn btn-primary mb-2">Find</button>
+    </form>
+</div>
+<br>
+
+<div class="d-flex justify-content-center">
+    <table class="table">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col"> ISBN </th>
+            <th scope="col"> Title </th>
+            <th scope="col"> Author </th>
+        </tr>
+        </thead>
+        <tbody id="books">
+        </tbody>
+    </table>
+</div>
+<br/>
+<script>
+    $(function() {
+        booksTable = document.getElementById("books");
+        $(document).ready(showBooks())
+
+        $('#findBooks').submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                type: 'GET',
+                url: '/find-books',
+                data: {
+                    title: $(this).find('[id=find-title]').val()
+                },
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('Content-Type', 'application/json')
+                },
+                success: function (response){
+                    fillTable(response)
+                }
+            })
+        })
+
+        $('#createBook').submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                type: 'POST',
+                url: '/create-book',
+                dataType: 'json',
+                data: JSON.stringify({
+                    isbn: $(this).find('[id=isbn]').val(),
+                    title: $(this).find('[id=title]').val(),
+                    author: $(this).find('[id=author]').val()
+                }),
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('Content-Type', 'application/json')
+                },
+                success: function (response) {
+                    console.log(response)
+                    addToTable(response)
+                }
+            });
+        });
+
+        function showBooks() {
+            $.ajax({
+                type: 'GET',
+                url: "/show-books",
+                success: function (data) {
+                    fillTable(data)
+                }
+            })
+        }
+
+        function fillTable(response) {
+            $('#books').empty()
+            response.forEach(function (book){
+                addToTable(book)
+            })
+        }
+
+        function addToTable(book) {
+            let tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + book.isbn + '</td>' +
+                    '<td>' + book.title + '</td>' +
+                    '<td>' + book.author + '</td>';
+            booksTable.appendChild(tr)
+        }
+
+    });
+</script>
+</body>
+</html>

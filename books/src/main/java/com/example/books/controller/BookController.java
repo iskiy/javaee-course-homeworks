@@ -1,33 +1,48 @@
 package com.example.books.controller;
 
 import com.example.books.dto.BookDto;
+import com.example.books.repository.BooksRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Controller
+@RequiredArgsConstructor
 public class BookController {
+    private final BooksRepository books;
 
-    ArrayList<BookDto> books = new ArrayList<>();
-
-    @GetMapping("/create-book")
-    public String bookForm(){
-        return "create-book";
+    @GetMapping("/books")
+    public String booksForm(){
+        return "books";
     }
 
-    @PostMapping("/create-book")
-    public String saveBook(final BookDto bookDto, final Model model){
-        books.add(bookDto);
-        return "redirect:show-books";
+    @RequestMapping(value = "/create-book", method = RequestMethod.POST)
+    public ResponseEntity<BookDto> saveBook(
+            @RequestBody final BookDto bookDto){
+        books.addBook(bookDto);
+        return ResponseEntity.status(HttpStatus.OK).body(bookDto);
     }
 
+    @ResponseBody
     @GetMapping("/show-books")
-    public String showBooks(final Model model){
-        System.out.println(books);
-        model.addAttribute("books", books);
-        return "show-books";
+    public List<BookDto> showBooks(){
+        return books.getBooks();
+    }
+
+    @ResponseBody
+    @GetMapping("/find-books")
+    public List<BookDto> findbooks(@RequestParam("title") final String title){
+        System.out.println(title);
+            Predicate<BookDto> byTitle = bookDto -> bookDto.getTitle().contains(title);
+            return books.getBooks()
+                    .stream()
+                    .filter(byTitle)
+                    .collect(Collectors.toList());
     }
 }
