@@ -1,6 +1,6 @@
 package com.example.books.repository;
 
-import com.example.books.dto.BookDto;
+import com.example.books.entities.BookEntity;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
@@ -11,17 +11,17 @@ import java.util.List;
 @Data
 @Component
 public class BooksRepository {
-    private List<BookDto> books;
+    private List<BookEntity> books;
 
     public BooksRepository(){
         books = new ArrayList<>();
     }
 
-    public void addBooks(Collection<BookDto> books){
+    public void addBooks(Collection<BookEntity> books){
         this.books.addAll(books);
     }
 
-    public void addBook(BookDto book){
+    public void addBook(BookEntity book){
         books.add(book);
     }
 

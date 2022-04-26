@@ -1,21 +1,34 @@
 package com.example.books.controller;
 
-import com.example.books.dto.BookDto;
-import com.example.books.repository.BooksRepository;
+import com.example.books.services.BookService;
+import com.example.books.entities.BookEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.NoResultException;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
 public class BookController {
-    private final BooksRepository books;
+    private final BookService bookService;
+
+
+    @GetMapping("/book/{isbn}")
+    public String bookForm(@PathVariable("isbn") String isbn, Model model){
+        try {
+            BookEntity book = bookService.findByISBN(isbn);
+            model.addAttribute("book", book);
+            return "book";
+        } catch (NoResultException e){
+            model.addAttribute("ISBN", isbn);
+            return "book-error";
+        }
+    }
 
     @GetMapping("/books")
     public String booksForm(){
@@ -23,26 +36,21 @@ public class BookController {
     }
 
     @RequestMapping(value = "/create-book", method = RequestMethod.POST)
-    public ResponseEntity<BookDto> saveBook(
-            @RequestBody final BookDto bookDto){
-        books.addBook(bookDto);
-        return ResponseEntity.status(HttpStatus.OK).body(bookDto);
+    public ResponseEntity<BookEntity> saveBook(
+            @RequestBody final BookEntity book){
+        bookService.createBook(book.getIsbn(), book.getTitle(), book.getAuthor());
+        return ResponseEntity.status(HttpStatus.OK).body(book);
     }
 
     @ResponseBody
     @GetMapping("/show-books")
-    public List<BookDto> showBooks(){
-        return books.getBooks();
+    public List<BookEntity> showBooks(){
+        return bookService.findAllBooks();
     }
 
     @ResponseBody
     @GetMapping("/find-books")
-    public List<BookDto> findbooks(@RequestParam("title") final String title){
-        System.out.println(title);
-            Predicate<BookDto> byTitle = bookDto -> bookDto.getTitle().contains(title);
-            return books.getBooks()
-                    .stream()
-                    .filter(byTitle)
-                    .collect(Collectors.toList());
+    public List<BookEntity> findBooks(@RequestParam("title") final String title){
+        return bookService.findBookWhereISBNOrTitleOrAuthor(title);
     }
 }

@@ -1,0 +1,5 @@
+<dataset>
+    <book isbn="a1" title="title1" author = "author1"/>
+    <book isbn="b2" title="title2" author = "author2"/>
+    <book isbn="c3" title="title3" author = "author3"/>
+</dataset>

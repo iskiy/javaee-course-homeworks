@@ -27,7 +27,7 @@
 <div class="d-flex justify-content-center">
     <form class="form-inline" id="findBooks">
         <div class="form-group mx-sm-3 mb-2">
-            <input class="form-control" id="find-title" placeholder="Title">
+            <input class="form-control" id="find-title" placeholder="Keyword">
         </div>
         <button type="submit" class="btn btn-primary mb-2">Find</button>
     </form>
@@ -87,8 +87,7 @@
                     xhr.setRequestHeader('Content-Type', 'application/json')
                 },
                 success: function (response) {
-                    console.log(response)
-                    addToTable(response)
+                    showBooks()
                 }
             });
         });

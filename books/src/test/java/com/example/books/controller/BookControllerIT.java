@@ -1,7 +1,7 @@
 package com.example.books.controller;
 
 import com.example.books.DemoApplication;
-import com.example.books.dto.BookDto;
+import com.example.books.entities.BookEntity;
 import com.example.books.repository.BooksRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
@@ -31,16 +31,16 @@ class BookControllerIT {
     @Autowired
     BooksRepository books;
 
-    private List<BookDto> showBooksList = Arrays.asList(
-            new BookDto("isbn1", "title1", "author1"),
-            new BookDto("isbnaa", "titleaa", "authoraa"),
-            new BookDto("isbnbb", "titlebb", "authorbb"));
+    private List<BookEntity> showBooksList = Arrays.asList(
+            new BookEntity("isbn1", "title1", "author1"),
+            new BookEntity("isbnaa", "titleaa", "authoraa"),
+            new BookEntity("isbnbb", "titlebb", "authorbb"));
 
     @Test
     void showBooksTest() {
         books.addBooks(showBooksList);
 
-        List<BookDto> responseList = given()
+        List<BookEntity> responseList = given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .when()
                     .get("show-books")
@@ -49,7 +49,7 @@ class BookControllerIT {
                     .extract()
                     .body()
                     .jsonPath()
-                    .getList(".", BookDto.class);
+                    .getList(".", BookEntity.class);
 
         assertEquals(responseList, showBooksList);
         books.clear();
@@ -58,9 +58,9 @@ class BookControllerIT {
     @Test
     void createBookTest() throws Exception {
         books.addBooks(showBooksList);
-        BookDto book = new BookDto("isbn4", "title4", "author4");
+        BookEntity book = new BookEntity("isbn4", "title4", "author4");
         final String jsonRequest = mapper.writeValueAsString(book);
-        BookDto responseBook = given()
+        BookEntity responseBook = given()
                     .body(jsonRequest)
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .when()
@@ -69,7 +69,7 @@ class BookControllerIT {
                     .statusCode(200)
                     .extract()
                     .body()
-                    .as(BookDto.class);
+                    .as(BookEntity.class);
 
         assertEquals(responseBook, book);
         assertTrue(books.getBooks().contains(book));
@@ -79,8 +79,8 @@ class BookControllerIT {
     @Test
     void findBookTest() {
         books.addBooks(showBooksList);
-        BookDto book = new BookDto("isbnaa", "titleaa", "authoraa");
-        List<BookDto> responseBooks = given()
+        BookEntity book = new BookEntity("isbnaa", "titleaa", "authoraa");
+        List<BookEntity> responseBooks = given()
                     .queryParam("title", "titleaa")
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .when()
@@ -90,7 +90,7 @@ class BookControllerIT {
                     .extract()
                     .body()
                     .jsonPath()
-                    .getList(".", BookDto.class);
+                    .getList(".", BookEntity.class);
 
         assertEquals(responseBooks, List.of(book));
         books.clear();

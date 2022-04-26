@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Book</title>
+</head>
+<body>
+    <br>
+    <div class="d-flex justify-content-center">
+        ISBN: <th:block th:text="${book.isbn}"></th:block>
+        <br>
+        Title: <th:block th:text="${book.title}"></th:block>
+        <br>
+        Author: <th:block th:text="${book.author}"></th:block>
+        <br>
+    </div>
+</body>
+</html>
