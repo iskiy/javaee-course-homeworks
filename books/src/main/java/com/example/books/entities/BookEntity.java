@@ -15,6 +15,7 @@ import javax.persistence.Table;
 @Setter
 @ToString
 @AllArgsConstructor
+@Data
 public class BookEntity {
 
     @Id

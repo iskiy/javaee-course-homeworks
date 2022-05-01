@@ -10,10 +10,10 @@ import java.util.List;
 
 @Data
 @Component
-public class BooksRepository {
+public class OldBooksRepository {
     private List<BookEntity> books;
 
-    public BooksRepository(){
+    public OldBooksRepository(){
         books = new ArrayList<>();
     }
 

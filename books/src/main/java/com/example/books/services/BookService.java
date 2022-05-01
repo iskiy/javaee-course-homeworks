@@ -1,51 +1,54 @@
 package com.example.books.services;
 
 import com.example.books.entities.BookEntity;
+import com.example.books.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
+import org.h2.mvstore.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BookService {
-    private final EntityManager entityManager;
+    private final BookRepository bookRepository;
 
     @Transactional
     public BookEntity createBook(String isbn, String title, String author) {
-        BookEntity book = new BookEntity();
-        book.setIsbn(isbn);
-        book.setTitle(title);
-        book.setAuthor(author);
-
-        return entityManager.merge(book);
+        return bookRepository.saveAndFlush(new BookEntity(isbn, title, author));
     }
 
     @Transactional
     public List<BookEntity> findAllBooks() {
-        return entityManager
-                .createQuery("SELECT b FROM BookEntity b", BookEntity.class)
-                .getResultList();
+        return bookRepository.findAll();
     }
 
-    ;
+    @Transactional
+    public List<BookEntity> findPage(PageRequest pr){
+        return bookRepository.findAll(pr).stream().collect(Collectors.toList());
+    }
 
     @Transactional
     public List<BookEntity> findBookWhereISBNOrTitleOrAuthor(String searchText) {
-        return entityManager.createQuery("SELECT b FROM BookEntity b " +
-                        "where b.isbn LIKE:query" +
-                        " OR b.title LIKE:query OR b.author LIKE:query", BookEntity.class)
-                .setParameter("query", '%' + searchText + '%')
-                .getResultList();
+        return bookRepository.findBookWhereISBNOrTitleOrAuthor(searchText);
+    }
+
+    @Transactional
+    public List<BookEntity> findBookWhereISBNOrTitleOrAuthorByPage(PageRequest pr, String searchText) {
+        return bookRepository.findBookWhereISBNOrTitleOrAuthor(searchText);
     }
 
     @Transactional
     public BookEntity findByISBN(String isbn) {
-        return entityManager.createQuery("SELECT b FROM BookEntity b WHERE b.isbn = :isbn", BookEntity.class)
-                .setParameter("isbn", isbn)
-                .getSingleResult();
+        return bookRepository.findByIsbn(isbn);
 
+    }
+
+    @Transactional
+    public long amount(){
+        return bookRepository.count();
     }
 }

@@ -47,11 +47,19 @@
         </tbody>
     </table>
 </div>
+
+<ul class="pagination justify-content-center" style="margin:20px 0; cursor: pointer;">
+</ul>
 <br/>
 <script>
+    pagesAmount = 0
+    currentPage = 1
+
     $(function() {
         booksTable = document.getElementById("books");
-        $(document).ready(showBooks())
+        $(document).ready(function (){
+            showBooks()
+        })
 
         $('#findBooks').submit(function (e) {
             e.preventDefault();
@@ -92,11 +100,62 @@
             });
         });
 
-        function showBooks() {
+        function buildPagination(){
+            updatedPagesAmount = getPagesAmount()
+            pagingLink = ''
+            for(i = pagesAmount + 1; i < updatedPagesAmount + 1; i++){
+                if(currentPage === i) {
+                    pagingLink += '<li class="page-item active"><a class="page-link"> ' + i + ' </a></li>';
+                } else{
+                    pagingLink += '<li class="page-item"><a class="page-link"> ' + i + ' </a></li>';
+                }
+            }
+            pagesAmount = updatedPagesAmount
+            $("ul.pagination").append(pagingLink)
+        }
+
+        function updatePages(){
+            if(pagesAmount < getPagesAmount()){
+                pagesAmount++
+            }
+            addPage(pagesAmount)
+        }
+
+        function addPage(i){
+            $("ul.pagination").append('<li class="page-item"><a class="page-link"> ' + i + ' </a></li>')
+        }
+
+        function getPagesAmount(){
+            result = 0
+            $.ajaxSetup({async: false});
             $.ajax({
                 type: 'GET',
-                url: "/show-books",
+                url: '/amount',
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('Content-Type', 'application/json')
+                },
+                success: function (response) {
+                    console.log("response:" + response)
+                    result = response
+                }
+            })
+            $.ajaxSetup({async: true});
+            return result
+        }
+
+        function showBooks() {
+            buildPagination()
+            request_url = "/show-books"
+            search_params = new URLSearchParams()
+            search_params.append("page", currentPage)
+            request_url+="?" + search_params.toString()
+
+            $.ajax({
+                type: 'GET',
+                url: request_url,
                 success: function (data) {
+                    console.log("request url:" + request_url)
+                    console.log("response:" + data)
                     fillTable(data)
                 }
             })
@@ -116,6 +175,15 @@
                     '<td>' + book.author + '</td>';
             booksTable.appendChild(tr)
         }
+
+        $(document).on("click", "ul.pagination li a", function() {
+            var data = $(this).attr('data');
+            let val = $(this).text();
+            $("li.active").removeClass("active");
+            $(this).parent().addClass("active");
+            currentPage = val
+            showBooks()
+        })
 
     });
 </script>

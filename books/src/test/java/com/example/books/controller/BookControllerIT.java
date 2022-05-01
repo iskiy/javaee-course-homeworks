@@ -2,8 +2,13 @@ package com.example.books.controller;
 
 import com.example.books.DemoApplication;
 import com.example.books.entities.BookEntity;
-import com.example.books.repository.BooksRepository;
+import com.example.books.repository.BookRepository;
+import com.example.books.repository.OldBooksRepository;
+import com.example.books.services.AbstractTest;
+import com.example.books.services.BookService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.springtestdbunit.annotation.DatabaseSetup;
+import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = DemoApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class BookControllerIT {
+@DatabaseSetup("/controller/controller-init.xml")
+@DatabaseTearDown("/services/book-service/clean-up.xml")
+class BookControllerIT extends AbstractTest {
     @LocalServerPort
     void savePort(final int port) {
         // save port of locally starter server during test
@@ -29,17 +36,10 @@ class BookControllerIT {
     ObjectMapper mapper;
 
     @Autowired
-    BooksRepository books;
-
-    private List<BookEntity> showBooksList = Arrays.asList(
-            new BookEntity("isbn1", "title1", "author1"),
-            new BookEntity("isbnaa", "titleaa", "authoraa"),
-            new BookEntity("isbnbb", "titlebb", "authorbb"));
+    private BookService bookService;
 
     @Test
     void showBooksTest() {
-        books.addBooks(showBooksList);
-
         List<BookEntity> responseList = given()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .when()
@@ -51,13 +51,11 @@ class BookControllerIT {
                     .jsonPath()
                     .getList(".", BookEntity.class);
 
-        assertEquals(responseList, showBooksList);
-        books.clear();
+        assertEquals(3, responseList.size());
     }
 
     @Test
     void createBookTest() throws Exception {
-        books.addBooks(showBooksList);
         BookEntity book = new BookEntity("isbn4", "title4", "author4");
         final String jsonRequest = mapper.writeValueAsString(book);
         BookEntity responseBook = given()
@@ -72,13 +70,11 @@ class BookControllerIT {
                     .as(BookEntity.class);
 
         assertEquals(responseBook, book);
-        assertTrue(books.getBooks().contains(book));
-        books.clear();
+        assertTrue(bookService.findAllBooks().contains(book));
     }
 
     @Test
     void findBookTest() {
-        books.addBooks(showBooksList);
         BookEntity book = new BookEntity("isbnaa", "titleaa", "authoraa");
         List<BookEntity> responseBooks = given()
                     .queryParam("title", "titleaa")
@@ -93,6 +89,5 @@ class BookControllerIT {
                     .getList(".", BookEntity.class);
 
         assertEquals(responseBooks, List.of(book));
-        books.clear();
     }
 }
