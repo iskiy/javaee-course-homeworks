@@ -57,6 +57,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -77,9 +81,14 @@ public class UserEntity {
     private Integer id;
 
     @Column(name = "login", unique = true)
+    @NotEmpty(message = "Login can`t be empty")
+    @Pattern(regexp = "^[A-Za-z0-9]$", message = "Login must contain only letters and numbers")
     private String login;
 
     @Column(name = "password")
+    @NotEmpty(message = "Password can`t be empty")
+    @Size(min = 8, message = "password too short")
+    @Size(max = 20, message = "password too long}")
     private String password;
 
     @ManyToMany
