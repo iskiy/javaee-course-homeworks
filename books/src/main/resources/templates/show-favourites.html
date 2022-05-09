@@ -1,0 +1,72 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>Favourites books</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+
+<body th:if="${#authorization.expression('hasAuthority(''VIEW_CATALOG'')')}">
+<div class="d-flex justify-content-center">
+    <button class="btn btn-primary" onclick="window.location='/books';">To all books</button>
+</div>
+<br>
+
+<div class="d-flex justify-content-center">
+        <br>
+    <br>
+    <table id="table" class="table">
+    <thead class="thead-dark">
+    <tr>
+        <th scope="col"> ISBN </th>
+        <th scope="col"> Title </th>
+        <th scope="col"> Author </th>
+        <th scope="col">Favourite</th>
+    </tr>
+    </thead>
+    <tbody id="books">
+    <tr th:each="book: ${books}">
+        <td th:text="${book.isbn}"></td>
+        <td th:text="${book.title}"></td>
+        <td th:text="${book.author}"></td>
+        <td> <button class="btn btn-secondary" type="submit">Remove</button></td>
+    </tr>
+    </tbody>
+</table>
+</div>
+
+<script>
+    window.onload = removeFromList();
+    function removeFromList() {
+        let books = document.getElementById('table');
+        let rows = Array.from(books.getElementsByTagName('tr'));
+
+        for (const [i, r] of rows.entries()) {
+            const isbn = r.cells[0];
+            const title = r.cells[1];
+            const author = r.cells[2];
+            r.cells[3].addEventListener('click', function (e) {
+                e.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: '/favourite-delete',
+                    dataType: 'json',
+                    data: JSON.stringify({
+                        isbn: $(isbn).text(),
+                        title: $(title).text(),
+                        author: $(author).text()
+                    }),
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('Content-Type', 'application/json')
+                    },
+                    success: function (response) {
+                        console.log(response);
+                        r.remove();
+                    },
+                })
+            })
+        }
+    }
+</script>
+</body>
+
+</html>

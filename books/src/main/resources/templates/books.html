@@ -7,6 +7,16 @@
 </head>
 <body>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+<a th:href="@{/logout}" th:if="${#authorization.expression('isAuthenticated()')}"><button class="btn btn-info">Log out</button></a>
+<a th:href="@{/show-favourites}" th:if="${#authorization.expression('isAuthenticated()')}"><button class="btn btn-info">To liked </button></a>
+<a th:href="@{/login}" th:if="${#authorization.expression('isAnonymous()')}"><button class="btn btn-info">Log in</button></a>
+<a th:href="@{./register}" th:if="${#authorization.expression('isAnonymous()')}"><button class="btn btn-info">Register</button></a>
+
+<!--<button onclick="window.location='/book/favourite-list';" th:if="${#authorization.expression('hasAuthority(''VIEW_CATALOG'')')}">-->
+<!--    View favourite books-->
+<!--</button>-->
+
 <br>
 <div class="d-flex justify-content-center">
     <form class="form-row" id="createBook">
@@ -41,6 +51,7 @@
             <th scope="col"> ISBN </th>
             <th scope="col"> Title </th>
             <th scope="col"> Author </th>
+            <th scope="col" th:if="${#authorization.expression('hasAuthority(''VIEW_CATALOG'')')}">Favourite</th>
         </tr>
         </thead>
         <tbody id="books">
@@ -58,25 +69,25 @@
     $(function() {
         booksTable = document.getElementById("books");
         $(document).ready(function (){
-            showBooks()
+            showBooks(null)
         })
 
         $('#findBooks').submit(function (e) {
             e.preventDefault();
-
-            $.ajax({
-                type: 'GET',
-                url: '/find-books',
-                data: {
-                    title: $(this).find('[id=find-title]').val()
-                },
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader('Content-Type', 'application/json')
-                },
-                success: function (response){
-                    fillTable(response)
-                }
-            })
+            showBooks($(this).find('[id=find-title]').val())
+            // $.ajax({
+            //     type: 'GET',
+            //     url: '/find-books',
+            //     data: {
+            //         title: $(this).find('[id=find-title]').val()
+            //     },
+            //     beforeSend: function (xhr) {
+            //         xhr.setRequestHeader('Content-Type', 'application/json')
+            //     },
+            //     success: function (response){
+            //         fillTable(response)
+            //     }
+            // })
         })
 
         $('#createBook').submit(function (e) {
@@ -95,13 +106,13 @@
                     xhr.setRequestHeader('Content-Type', 'application/json')
                 },
                 success: function (response) {
-                    showBooks()
+                    showBooks(null)
                 }
             });
         });
 
-        function buildPagination(){
-            updatedPagesAmount = getPagesAmount()
+        function buildPagination(keyword){
+            updatedPagesAmount = getPagesAmount(keyword)
             pagingLink = ''
             for(i = pagesAmount + 1; i < updatedPagesAmount + 1; i++){
                 if(currentPage === i) {
@@ -125,29 +136,39 @@
             $("ul.pagination").append('<li class="page-item"><a class="page-link"> ' + i + ' </a></li>')
         }
 
-        function getPagesAmount(){
+        function getPagesAmount(keyword){
+            request_url = '/amount'
+            if(keyword != null) {
+                search_params = new URLSearchParams()
+                search_params.append("keyword", keyword)
+                request_url+="?" + search_params.toString()
+            }
+
             result = 0
             $.ajaxSetup({async: false});
             $.ajax({
                 type: 'GET',
-                url: '/amount',
+                url: request_url,
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader('Content-Type', 'application/json')
                 },
                 success: function (response) {
-                    console.log("response:" + response)
                     result = response
                 }
             })
             $.ajaxSetup({async: true});
+            console.log(result)
             return result
         }
 
-        function showBooks() {
-            buildPagination()
+        function showBooks(keyword) {
+            buildPagination(keyword)
             request_url = "/show-books"
             search_params = new URLSearchParams()
             search_params.append("page", currentPage)
+            if(keyword != null) {
+                search_params.append("keyword", keyword)
+            }
             request_url+="?" + search_params.toString()
 
             $.ajax({
@@ -173,7 +194,46 @@
             tr.innerHTML = '<td>' + book.isbn + '</td>' +
                     '<td>' + book.title + '</td>' +
                     '<td>' + book.author + '</td>';
+
+            if([[${#authorization.expression('hasAuthority("VIEW_CATALOG")')}]]){
+                tr.innerHTML +='<td "><button type="submit" class="btn btn-dark""> LIKE</button></td>';
+            }
+            console.log(book)
             booksTable.appendChild(tr)
+            addFavouriteClickEvent()
+        }
+
+        window.onload = addFavouriteClickEvent();
+        function addFavouriteClickEvent() {
+            let books = document.getElementById('books');
+            let rows = books.getElementsByTagName('tr');
+
+            for (const r of rows) {
+                const isbn = r.cells[0];
+                const title = r.cells[1];
+                const author = r.cells[2];
+                if([[${#authorization.expression('hasAuthority("VIEW_CATALOG")')}]]){
+                        r.cells[3].addEventListener('click', function (e) {
+                            e.preventDefault();
+                            $.ajax({
+                                type: 'POST',
+                                url: '/add-favourite',
+                                dataType: 'json',
+                                data: JSON.stringify({
+                                    title: $(title).text(),
+                                    isbn: $(isbn).text(),
+                                    author: $(author).text()
+                                }),
+                                beforeSend: function (xhr) {
+                                    xhr.setRequestHeader('Content-Type', 'application/json')
+                                },
+                                success: function (response) {
+                                    console.log(response);
+                                },
+                            })
+                        })
+                }
+            }
         }
 
         $(document).on("click", "ul.pagination li a", function() {
@@ -182,7 +242,7 @@
             $("li.active").removeClass("active");
             $(this).parent().addClass("active");
             currentPage = val
-            showBooks()
+            showBooks($(this).find('[id=find-title]').val())
         })
 
     });

@@ -1,0 +1,58 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>Register</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+
+<body>
+<div class="d-flex justify-content-center">
+    <a th:href="@{./login}" ><button class="btn btn-dark">Log in</button></a>
+    <br>
+    <br>
+    <a th:href="@{./books}" ><button class="btn btn-dark">To main page</button></a>
+    <br>
+</div>
+
+<br>
+<br>
+<div class="d-flex justify-content-center">
+    <form class="form-row" id="register" th:if="${#authorization.expression('isAnonymous()')}">
+        <div class="col">
+            <input  class="form-control" name="login" id="login" placeholder="login">
+        </div>
+        <div class="col">
+            <input  class="form-control" name="password" id="password" placeholder="password">
+        </div>
+        <button type="submit" class="btn btn-primary mb-2">Register</button>
+    </form>
+</div>
+
+
+
+<script>
+    $(function(){
+        $('#register').submit(function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: '/register-user',
+                dataType: 'json',
+                data: JSON.stringify({
+                    login: $(this).find('[name=login]').val(),
+                    password: $(this).find('[name=password]').val()
+                }),
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('Content-Type', 'application/json')
+                },
+                success: function (response) {
+                    console.log(response)
+                    },
+            })
+
+        })
+    });
+</script>
+</body>
+
+</html>
